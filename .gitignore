@@ -1,0 +1,15 @@
+# ---------------------------------------------
+# ARCHIVOS DE SISTEMA OPERATIVO WINDOWS
+# ---------------------------------------------
+
+# Bases de datos de miniaturas
+Thumbs.db
+
+# Configuraciones de visualización de carpetas
+desktop.ini
+
+# Archivos de la Papelera de Reciclaje
+$RECYCLE.BIN/
+
+# Archivos de copia de seguridad comunes
+*.bak
