@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class PedidoMinimo_Public {
+class TimedFeatured_Public {
     public function __construct()
     {
         
