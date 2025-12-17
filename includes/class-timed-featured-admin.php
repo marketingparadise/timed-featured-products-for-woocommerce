@@ -16,6 +16,8 @@ class TimedFeatured_Admin {
     public function __construct() {
         add_action('admin_menu', array($this, 'timed_featured_menu')); // Add page to WooCommerce submenu
         add_action('admin_init', array ($this, 'timed_featured_settings')); // We create settings sections, register settings, and create fields.
+        add_action( 'woocommerce_product_options_general_product_data', array( $this, 'paint_product_field' ) );// Add product field in general tab
+        add_action( 'woocommerce_process_product_meta', array( $this, 'save_product_field' ) ); // Save product field in general tab
     }
 
     /**
@@ -86,6 +88,27 @@ class TimedFeatured_Admin {
         echo '<p class="description">' . esc_html__( 'This is a global option. You can override it at product level.', 'timed-featured-products-for-woocommerce' ) . '</p>';
     }
 
+    public function paint_product_field() {
+        global $post;
+        $value = get_post_meta( $post->ID, '_featured_days', true );
+        $args = array(
+            'id'                => '_featured_days', // Meta key
+            'label'             => __( 'Featured days', 'timed-featured-products-for-woocommerce' ),
+            'placeholder'       => '',
+            'desc_tip'          => true,
+            'description'       => __( 'Priority rules:<br>1. <b>Empty - </b> Use global settings.<br>2. <b>Zero - </b> Override global settings: never expires (infinite).<br>3. <b>Number - </b>Override global settings: specific days for this product.', 'timed-featured-products-for-woocommerce' ),
+            'type'              => 'number',
+            'value'             => $value, 
+            'custom_attributes' => array(
+                'step' => '1',
+                'min'  => '0'
+            )
+        );
+        echo '<div class="options_group">';
+        woocommerce_wp_text_input( $args ); // Use woocommerce_wp_text_input to maintain native styles.
+        echo '</div>';
+    }
+
     // Fields validation
     public function validate_time ($input) {
         if (!is_numeric($input) || $input < 0) { // Time must be a number greater than zero.
@@ -100,5 +123,18 @@ class TimedFeatured_Admin {
 
     $sanitized_input = floatval($input);
     return $sanitized_input;
+    }
+
+    // Save product field
+    public function save_product_field( $post_id ) {
+
+        $woocommerce_days_field = isset( $_POST['_featured_days'] ) ? $_POST['_featured_days'] : ''; // Sanitize
+        
+        if ( '' === $woocommerce_days_field ) {
+            delete_post_meta( $post_id, '_featured_days' ); // Empty field means using the global value.
+        } else {
+            $days = absint( $woocommerce_days_field ); // Sanitize
+            update_post_meta( $post_id, '_featured_days', $days );
+        }
     }
 }
