@@ -71,7 +71,7 @@ class TimedFeatured_Admin {
         // 3 - We add the fields
         add_settings_field(
             'timedfeatured_time',
-            esc_html__( 'Time', 'timed-featured-products-for-woocommerce' ),
+            esc_html__( 'Time (in days)', 'timed-featured-products-for-woocommerce' ),
             array ($this, 'paint_time'), // function that paints the field
             $page_slug,
             'timedfeatured-section' // Section ID
@@ -81,7 +81,9 @@ class TimedFeatured_Admin {
     // 4 - We paint the fields
     public function paint_time () {
         $time = get_option('timedfeatured_time', 0);
-        echo "<input id='mkp-timedfeatured-time' name='timedfeatured_time' type='text' value='". esc_attr( $time ) ."' />";
+        echo "<input id='mkp-timedfeatured-time' name='timedfeatured_time' type='number' min='0' value='". esc_attr( $time ) ."' />";
+        echo '<p class="description">' . esc_html__( 'A time of 0 means that the products will remain featured until you manually remove them.', 'timed-featured-products-for-woocommerce' ) . '</p>';
+        echo '<p class="description">' . esc_html__( 'This is a global option. You can override it at product level.', 'timed-featured-products-for-woocommerce' ) . '</p>';
     }
 
     // Fields validation
