@@ -18,6 +18,8 @@ class TimedFeatured_Admin {
         add_action('admin_init', array ($this, 'timed_featured_settings')); // We create settings sections, register settings, and create fields.
         add_action( 'woocommerce_product_options_general_product_data', array( $this, 'paint_product_field' ) );// Add product field in general tab
         add_action( 'woocommerce_process_product_meta', array( $this, 'save_product_field' ) ); // Save product field in general tab
+        add_filter( 'manage_edit-product_columns', array( $this, 'paint_days_column' ) ); // Add featured days column
+        add_action( 'manage_product_posts_custom_column', array( $this, 'render_days_column_content' ), 10, 2 ); // Render value in featured days column
     }
 
     /**
@@ -109,6 +111,19 @@ class TimedFeatured_Admin {
         echo '</div>';
     }
 
+    public function paint_days_column( $columns ) {
+        $new_columns = array();
+
+        foreach ( $columns as $key => $column_label ) {
+            $new_columns[ $key ] = $column_label;
+            if ( 'featured' === $key ) {
+                $new_columns['timedfeatured_featured_days'] = esc_html__( 'Featured Days', 'timed-featured-products-for-woocommerce' );
+            }
+        }
+
+        return $new_columns;
+    }
+
     // Fields validation
     public function validate_time ($input) {
         if (!is_numeric($input) || $input < 0) { // Time must be a number greater than zero.
@@ -135,6 +150,18 @@ class TimedFeatured_Admin {
         } else {
             $days = absint( $woocommerce_days_field ); // Sanitize
             update_post_meta( $post_id, '_featured_days', $days );
+        }
+    }
+
+    public function render_days_column_content( $column, $post_id ) {
+        if ( 'timedfeatured_featured_days' === $column ) {
+            $days = get_post_meta( $post_id, '_featured_days', true );
+
+            if ( '' === $days ) {
+                echo '<span class="na">&ndash;</span>';
+            } else {
+                echo esc_html( $days );
+            }
         }
     }
 }
