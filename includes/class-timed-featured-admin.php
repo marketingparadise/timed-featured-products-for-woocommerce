@@ -18,6 +18,7 @@ class TimedFeatured_Admin {
         add_action('admin_init', array ($this, 'timed_featured_settings')); // We create settings sections, register settings, and create fields.
         add_action( 'woocommerce_product_options_general_product_data', array( $this, 'paint_product_field' ) );// Add product field in general tab
         add_action( 'woocommerce_admin_process_product_object', array( $this, 'save_product_field' ) ); // Save product field in general tab
+        add_action( 'woocommerce_before_product_object_save', array( $this, 'save_product_star_toggle' ), 10, 2 ); // Save product field in product list administration
         add_filter( 'manage_edit-product_columns', array( $this, 'paint_days_column' ) ); // Add featured days column
         add_action( 'manage_product_posts_custom_column', array( $this, 'render_days_column_content' ), 10, 2 ); // Render value in featured days column
     }
@@ -140,7 +141,7 @@ class TimedFeatured_Admin {
     return $sanitized_input;
     }
 
-    // Save product field
+    // Save product field in general tab
     public function save_product_field( $product ) {
 
         // Values post form
@@ -178,6 +179,21 @@ class TimedFeatured_Admin {
 
         // --- NOTE: In this hook, it is NOT necessary to call $product->save() ---
         // WooCommerce will automatically call it immediately after this hook.
+    }
+
+    // Save product field in product list administration
+    public function save_product_star_toggle( $product, $data_store ) {
+
+        if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX || ! isset( $_REQUEST['action'] ) || $_REQUEST['action'] !== 'woocommerce_feature_product' ) {
+            return;
+        }
+
+        if ( $product->get_featured() ) {
+            $global_default = get_option( 'timedfeatured_time', 0 );
+            $product->update_meta_data( '_featured_days', absint( $global_default ) );
+        } else {
+            $product->delete_meta_data( '_featured_days' );
+        }
     }
 
     public function render_days_column_content( $column, $post_id ) {
