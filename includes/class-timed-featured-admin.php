@@ -21,6 +21,7 @@ class TimedFeatured_Admin {
         add_action( 'woocommerce_before_product_object_save', array( $this, 'save_product_star_toggle' ), 10, 2 ); // Save product field in product list administration
         add_filter( 'manage_edit-product_columns', array( $this, 'paint_days_column' ) ); // Add featured days column
         add_action( 'manage_product_posts_custom_column', array( $this, 'render_days_column_content' ), 10, 2 ); // Render value in featured days column
+        add_action( 'admin_notices', array( $this, 'display_featured_notice' ) ); // Notifications in backend
     }
 
     /**
@@ -99,7 +100,7 @@ class TimedFeatured_Admin {
             'label'             => __( 'Featured days', 'timed-featured-products-for-woocommerce' ),
             'placeholder'       => '',
             'desc_tip'          => true,
-            'description'       => __( 'Priority rules:<br>1. <b>Empty - </b> Use global settings.<br>2. <b>Zero - </b> Override global settings: never expires (infinite).<br>3. <b>Number - </b>Override global settings: specific days for this product.', 'timed-featured-products-for-woocommerce' ),
+            'description'       => __( 'Priority rules:<br>1. <b>Empty - </b> The product is no longer featured.<br>2. <b>Zero - </b> Override global settings: never expires (infinite).<br>3. <b>Number - </b>Override global settings: specific days for this product.', 'timed-featured-products-for-woocommerce' ),
             'type'              => 'number',
             'value'             => $value, 
             'custom_attributes' => array(
@@ -142,7 +143,7 @@ class TimedFeatured_Admin {
     }
 
     // Save product field in general tab
-public function save_product_field( $product ) {
+    public function save_product_field( $product ) {
 
         // Values post form
         $days_post  = isset( $_POST['_featured_days'] ) ? $_POST['_featured_days'] : ''; 
@@ -152,41 +153,45 @@ public function save_product_field( $product ) {
         $current_meta_days = $product->get_meta( '_featured_days' );
         $had_days_assigned = ( '' !== $current_meta_days );
         
+        // Variables for notifications
+        $notice_days = 0;
+        $is_default  = false;
+        $set_notice  = false;
+
         // 1 - If days field IS NOT empty
         if ( '' !== $days_post ) {
             $new_days = absint( $days_post );
 
             if ( ! $is_checked && $had_days_assigned && $new_days === absint( $current_meta_days ) ) {
-                
-                // User have unchecked native check manually
                 $product->delete_meta_data( '_featured_days' );
                 $product->set_featured( false );
-
             } else {
-                // New number means to be featured allways
                 $product->update_meta_data( '_featured_days', $new_days );
                 $product->set_featured( true );
+                $notice_days = $new_days;
+                $set_notice  = true;
             }
         } 
         // 2 - If days field IS empty
         else {
-            
-            // User have checked native check manually
             if ( $is_checked && ! $had_days_assigned ) {
-                
                 $global_default = get_option( 'timedfeatured_time', 0 );
                 $product->update_meta_data( '_featured_days', absint( $global_default ) );
                 $product->set_featured( true );
+                $notice_days = absint( $global_default );
+                $is_default  = true;
+                $set_notice  = true;
 
             } else {
-                // If check is unchecked or user deleted days fiel manually
                 $product->delete_meta_data( '_featured_days' );
                 $product->set_featured( false );
             }
         }
 
-        // --- NOTE: In this hook, it is NOT necessary to call $product->save() ---
-        // WooCommerce will automatically call it immediately after this hook.
+        // Transient for notifications
+        if ( $set_notice ) {
+            $this->set_featured_transient( $product->get_name(), $notice_days, $is_default );
+        }
     }
 
     // Save product field in product list administration
@@ -198,9 +203,44 @@ public function save_product_field( $product ) {
 
         if ( $product->get_featured() ) {
             $global_default = get_option( 'timedfeatured_time', 0 );
-            $product->update_meta_data( '_featured_days', absint( $global_default ) );
+            $days = absint( $global_default );
+            $product->update_meta_data( '_featured_days', $days );
+        
+            $this->set_featured_transient( $product->get_name(), $days, true ); // Transient for ajax notifications
         } else {
             $product->delete_meta_data( '_featured_days' );
+        }
+    }
+
+    // Featured notifications
+    private function set_featured_transient( $product_name, $days, $is_default ) {
+        $days_text = ( 0 === $days ) ? __( 'indefinitely', 'timed-featured-products-for-woocommerce' ) : $days . ' ' . _n( 'day', 'days', $days, 'timed-featured-products-for-woocommerce' );
+
+        if ( $is_default && 0 !== $days ) {
+            $days_text .= ' ' . __( '(by default)', 'timed-featured-products-for-woocommerce' );
+        }
+
+        $message = sprintf(
+            __( 'The product <strong>%1$s</strong> has been featured %2$s.', 'timed-featured-products-for-woocommerce' ),
+            esc_html( $product_name ),
+            $days_text
+        );
+
+        set_transient( 'timedfeatured_notice_' . get_current_user_id(), $message, 45 );
+    }
+
+    // Display featured notifications
+    public function display_featured_notice() {
+        $transient_name = 'timedfeatured_notice_' . get_current_user_id();
+        $message = get_transient( $transient_name );
+
+        if ( $message ) {
+            ?>
+            <div class="notice notice-info is-dismissible">
+                <p><?php echo wp_kses_post( $message ); ?></p>
+            </div>
+            <?php
+            delete_transient( $transient_name );
         }
     }
 
