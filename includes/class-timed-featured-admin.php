@@ -156,7 +156,7 @@ class TimedFeatured_Admin {
         // Variables for notifications
         $notice_days = 0;
         $is_default  = false;
-        $set_notice  = false;
+        $set_notice  = false; // True = featured notification | False = unfeatured notification
 
         // 1 - If days field IS NOT empty
         if ( '' !== $days_post ) {
@@ -165,6 +165,7 @@ class TimedFeatured_Admin {
             if ( ! $is_checked && $had_days_assigned && $new_days === absint( $current_meta_days ) ) {
                 $product->delete_meta_data( '_featured_days' );
                 $product->set_featured( false );
+                $set_notice  = false;
             } else {
                 $product->update_meta_data( '_featured_days', $new_days );
                 $product->set_featured( true );
@@ -185,13 +186,17 @@ class TimedFeatured_Admin {
             } else {
                 $product->delete_meta_data( '_featured_days' );
                 $product->set_featured( false );
+                $set_notice  = false;
             }
         }
 
         // Transient for notifications
         if ( $set_notice ) {
             $this->set_featured_transient( $product->get_name(), $notice_days, $is_default );
+        } else {
+            $this->set_unfeatured_transient( $product->get_name() );
         }
+
     }
 
     // Save product field in product list administration
@@ -209,6 +214,7 @@ class TimedFeatured_Admin {
             $this->set_featured_transient( $product->get_name(), $days, true ); // Transient for ajax notifications
         } else {
             $product->delete_meta_data( '_featured_days' );
+            $this->set_unfeatured_transient( $product->get_name() );
         }
     }
 
@@ -224,6 +230,16 @@ class TimedFeatured_Admin {
             __( 'The product <strong>%1$s</strong> has been featured %2$s.', 'timed-featured-products-for-woocommerce' ),
             esc_html( $product_name ),
             $days_text
+        );
+
+        set_transient( 'timedfeatured_notice_' . get_current_user_id(), $message, 45 );
+    }
+
+    // Unfeatured notifications
+    private function set_unfeatured_transient( $product_name ) {
+        $message = sprintf(
+            __( 'The product <strong>%1$s</strong> is no longer featured.', 'timed-featured-products-for-woocommerce' ),
+            esc_html( $product_name )
         );
 
         set_transient( 'timedfeatured_notice_' . get_current_user_id(), $message, 45 );
