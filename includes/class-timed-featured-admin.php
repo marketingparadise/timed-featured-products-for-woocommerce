@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class TimedFeatured_Admin {
+class Timed_Featured_Admin {
 
     public function __construct() {
         add_action('check_featured_products', array($this, 'update_featured_products')); // Cron task

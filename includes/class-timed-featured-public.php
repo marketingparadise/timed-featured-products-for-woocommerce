@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class TimedFeatured_Public {
+class Timed_Featured_Public {
     public function __construct()
     {
         

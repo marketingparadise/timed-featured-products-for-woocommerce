@@ -18,21 +18,39 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-register_activation_hook( __FILE__, array( 'TimedFeatured_Admin', 'timedfeatured_activate_plugin' ) );
-register_deactivation_hook( __FILE__, array( 'TimedFeatured_Admin', 'timedfeatured_unschedule_task' ) );
+/**
+ * Autoloader
+ */
+function timedfeatured_autoload_classes( $class ) {
+    if ( strpos( $class, 'Timed_Featured_' ) !== 0 ) {
+        return;
+    }
+
+    // Convert the class name into a file path. E.g: Timed_Featured_Admin -> includes/class-timed-featured-admin.php
+    $file = plugin_dir_path( __FILE__ ) . 'includes/class-' . strtolower( str_replace( '_', '-', $class ) ) . '.php';
+
+    if ( file_exists( $file ) ) {
+        require_once $file;
+    }
+}
+
+spl_autoload_register( 'timedfeatured_autoload_classes' );
+
+/**
+ * Activation hooks
+ */
+register_activation_hook( __FILE__, array( 'Timed_Featured_Admin', 'timedfeatured_activate_plugin' ) );
+register_deactivation_hook( __FILE__, array( 'Timed_Featured_Admin', 'timedfeatured_unschedule_task' ) );
+
+
 
 final class TimedFeatured_Principal {
 
     public function __construct() {
-        $this->load_dependencies();
-        new TimedFeatured_Admin();
-        new TimedFeatured_Public();
+        new Timed_Featured_Admin();
+        new Timed_Featured_Public();
     }
 
-    private function load_dependencies() {
-        require_once plugin_dir_path( __FILE__ ) . 'includes/class-timed-featured-admin.php';
-        require_once plugin_dir_path( __FILE__ ) . 'includes/class-timed-featured-public.php';
-    }
 }
 
 /**
