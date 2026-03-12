@@ -159,9 +159,8 @@ class Timed_Featured_Admin {
 
     // 4 - We paint the fields
     public function paint_time () {
-        $time = get_option('timedfeatured_time', 30);
-        echo "<input id='mkp-timedfeatured-time' name='timedfeatured_time' type='number' min='0' value='". esc_attr( $time ) ."' />";
-        echo '<p class="description">' . esc_html__( 'A time of 0 means that the products will remain featured until you manually remove them.', 'timed-featured-products-for-woocommerce' ) . '</p>';
+        $time = get_option('timedfeatured_time', 7);
+        echo "<input id='mkp-timedfeatured-time' name='timedfeatured_time' type='number' min='1' value='". esc_attr( $time ) ."' />";
         echo '<p class="description">' . esc_html__( 'This is a global option. You can override it at product level.', 'timed-featured-products-for-woocommerce' ) . '</p>';
     }
 
@@ -201,17 +200,17 @@ class Timed_Featured_Admin {
 
     // Fields validation
     public function validate_time ($input) {
-        if (!is_numeric($input) || $input < 0) { // Time must be a number greater than zero.
+        if (!is_numeric($input) || $input <= 0) { // Time must be a number greater than zero.
             add_settings_error(
             'timedfeatured_settings_error',
             'no-float', // part of the error message ID id="setting-error-no-float"
             esc_html__('Time is invalid', 'timed-featured-products-for-woocommerce'), // Error message
             'error' // error type
         );
-        $input = get_option('timedfeatured_time', 0); // If there is an error, the previous value remains.
+        $input = get_option('timedfeatured_time', 7); // If there is an error, the previous value remains.
     }
 
-    $sanitized_input = floatval($input);
+    $sanitized_input = absint($input);
     return $sanitized_input;
     }
 
@@ -249,7 +248,7 @@ class Timed_Featured_Admin {
         // 2 - If days field IS empty
         else {
             if ( $is_checked && ! $had_days_assigned ) {
-                $global_default = get_option( 'timedfeatured_time', 0 );
+                $global_default = get_option( 'timedfeatured_time', 7 );
                 $product->update_meta_data( '_featured_days', absint( $global_default ) );
                 $product->set_featured( true );
                 $notice_days = absint( $global_default );
@@ -280,7 +279,7 @@ class Timed_Featured_Admin {
         }
 
         if ( $product->get_featured() ) {
-            $global_default = get_option( 'timedfeatured_time', 0 );
+            $global_default = get_option( 'timedfeatured_time', 7 );
             $days = absint( $global_default );
             $product->update_meta_data( '_featured_days', $days );
         
@@ -293,14 +292,14 @@ class Timed_Featured_Admin {
 
     // Featured notifications
     private function set_featured_transient( $product_name, $days, $is_default ) {
-        $days_text = ( 0 === $days ) ? __( 'indefinitely', 'timed-featured-products-for-woocommerce' ) : $days . ' ' . _n( 'day', 'days', $days, 'timed-featured-products-for-woocommerce' );
+        $days_text = $days . ' ' . _n( 'day', 'days', $days, 'timed-featured-products-for-woocommerce' );
 
-        if ( $is_default && 0 !== $days ) {
+        if ( $is_default ) {
             $days_text .= ' ' . __( '(by default)', 'timed-featured-products-for-woocommerce' );
         }
 
         $message = sprintf(
-            __( 'The product <strong>%1$s</strong> has been featured %2$s.', 'timed-featured-products-for-woocommerce' ),
+            __( 'The product <strong>%1$s</strong> has been featured for %2$s.', 'timed-featured-products-for-woocommerce' ),
             esc_html( $product_name ),
             $days_text
         );
