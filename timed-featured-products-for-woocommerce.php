@@ -48,7 +48,6 @@ final class TimedFeatured_Principal {
 
     public function __construct() {
         new Timed_Featured_Admin();
-        new Timed_Featured_Public();
     }
 
 }
