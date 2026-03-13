@@ -220,7 +220,9 @@ class Timed_Featured_Admin {
     public function save_product_field( $product ) {
 
         // Values post form
-        $days_post  = isset( $_POST['_featured_days'] ) ? $_POST['_featured_days'] : ''; 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce already verifies the nonce when saving the product.
+        $days_post  = isset( $_POST['_featured_days'] ) ? sanitize_text_field( wp_unslash( $_POST['_featured_days'] ) ) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce already verifies the nonce when saving the product.
         $is_checked = isset( $_POST['_featured'] );
 
         // Values in DDBB
@@ -276,6 +278,7 @@ class Timed_Featured_Admin {
     // Save product field in product list administration
     public function save_product_star_toggle( $product, $data_store ) {
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- WooCommerce verifies the nonce for this AJAX action natively.
         if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX || ! isset( $_REQUEST['action'] ) || $_REQUEST['action'] !== 'woocommerce_feature_product' ) {
             return;
         }
