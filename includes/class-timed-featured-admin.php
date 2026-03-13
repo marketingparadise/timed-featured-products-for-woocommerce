@@ -66,6 +66,7 @@ class Timed_Featured_Admin {
             'post_type'      => 'product',
             'posts_per_page' => -1,
             'fields'         => 'ids',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Justified: Runs via WP-Cron in the background, not on frontend.
             'meta_query'     => array(
                 array(
                     'key'     => '_featured_days',
