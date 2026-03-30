@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 class Timed_Featured_Admin {
 
     public function __construct() {
-        add_action('check_featured_products', array($this, 'update_featured_products')); // Cron task
+        add_action('timedfeatured_check_featured_products', array($this, 'update_featured_products')); // Cron task
         add_action('admin_menu', array($this, 'timed_featured_menu')); // Add page to WooCommerce submenu
         add_action('admin_init', array ($this, 'timed_featured_settings')); // We create settings sections, register settings, and create fields.
         add_action( 'woocommerce_product_options_general_product_data', array( $this, 'paint_product_field' ) );// Add product field in general tab
@@ -42,9 +42,9 @@ class Timed_Featured_Admin {
      * Schedule task for featured products.
      */
     public static function timedfeatured_schedule_task() {
-        if (!wp_next_scheduled('check_featured_products')) {
+        if (!wp_next_scheduled('timedfeatured_check_featured_products')) {
             $midnight = strtotime('tomorrow midnight');
-            wp_schedule_event($midnight + (3 * HOUR_IN_SECONDS), 'daily', 'check_featured_products');
+            wp_schedule_event($midnight + (3 * HOUR_IN_SECONDS), 'daily', 'timedfeatured_check_featured_products');
         }
     }
 
@@ -52,9 +52,9 @@ class Timed_Featured_Admin {
      * Un-schedule the task for featured products.
      */
     public static function timedfeatured_unschedule_task() {
-        $timestamp = wp_next_scheduled('check_featured_products');
+        $timestamp = wp_next_scheduled('timedfeatured_check_featured_products');
         if ( $timestamp ) {
-            wp_unschedule_event( $timestamp, 'check_featured_products' );
+            wp_unschedule_event( $timestamp, 'timedfeatured_check_featured_products' );
         }
     }
     
