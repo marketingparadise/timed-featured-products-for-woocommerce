@@ -3,7 +3,7 @@ Contributors: marketingparadise
 Tags: woocommerce, featured products, schedule, product management
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -66,6 +66,9 @@ The priority rules are simple: If you leave the field completely empty, the prod
 3. The WooCommerce product list backend, displaying the new "Featured Days" column.
 
 == Changelog ==
+
+= 1.0.1 =
+* New: Added a link to settings in plugin action links.
 
 = 1.0.0 =
 * Initial release of the plugin.

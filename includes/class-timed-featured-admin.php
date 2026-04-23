@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 
 class Timed_Featured_Admin {
 
-    public function __construct() {
+    public function __construct( $plugin_basename ) {
         add_action('timedfeatured_check_featured_products', array($this, 'update_featured_products')); // Cron task
         add_action('admin_menu', array($this, 'timed_featured_menu')); // Add page to WooCommerce submenu
         add_action('admin_init', array ($this, 'timed_featured_settings')); // We create settings sections, register settings, and create fields.

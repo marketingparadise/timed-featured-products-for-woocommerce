@@ -2,7 +2,7 @@
 /*
  * Plugin Name: Timed featured products for WooCommerce
  * Description: Feature woocommerce products for a limited time.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Requires Plugins: woocommerce
  * Author: Marketing Paradise
  * Author URI: https://mkparadise.com/
@@ -47,7 +47,7 @@ register_deactivation_hook( __FILE__, array( 'Timed_Featured_Admin', 'timedfeatu
 final class TimedFeatured_Principal {
 
     public function __construct() {
-        new Timed_Featured_Admin();
+        new Timed_Featured_Admin( plugin_basename( __FILE__ ) );
     }
 
 }
